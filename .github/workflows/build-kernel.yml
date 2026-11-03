@@ -34,6 +34,10 @@ jobs:
 
       - name: Generate kernel config
         run: |
+          sed -i 's/^CONFIG_VDSO=.*/CONFIG_VDSO=n/' arch/arm64/configs/begonia_user_defconfig 2>/dev/null || true
+          grep -q '^CONFIG_VDSO=' arch/arm64/configs/begonia_user_defconfig || echo 'CONFIG_VDSO=n' >> arch/arm64/configs/begonia_user_defconfig
+          sed -i 's/^CONFIG_VDSO32=.*/CONFIG_VDSO32=n/' arch/arm64/configs/begonia_user_defconfig 2>/dev/null || true
+          grep -q '^CONFIG_VDSO32=' arch/arm64/configs/begonia_user_defconfig || echo 'CONFIG_VDSO32=n' >> arch/arm64/configs/begonia_user_defconfig
           make begonia_user_defconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang CLANG_TRIPLE=aarch64-linux-gnu- LLVM=1 2>&1 | tail -5 || true
           scripts/config --disable COMPAT 2>/dev/null || true
           scripts/config --disable CC_STACKPROTECTOR_STRONG 2>/dev/null || true
