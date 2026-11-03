@@ -20,25 +20,26 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential bc bison flex libssl-dev libncurses5-dev \
-            libncursesw5-dev xz-utils tar curl wget git make gcc g++ libelf-dev
+            libncursesw5-dev xz-utils tar curl wget git make gcc g++ libelf-dev \
+            python3 python3-pip rsync
 
-      - name: Install cross-compilers
+      - name: Download Android NDK (contains clang 15)
         run: |
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu gcc-arm-linux-gnueabihf
-          echo "CROSS_COMPILE=aarch64-linux-gnu-" >> $GITHUB_ENV
-          echo "CROSS_COMPILE_ARM32=arm-linux-gnueabihf-" >> $GITHUB_ENV
-          echo "ARCH=arm64" >> $GITHUB_ENV
+          cd /tmp
+          wget -q https://dl.google.com/android/repository/android-ndk-r27b-linux.zip -O ndk.zip
+          unzip -q ndk.zip -d /opt
+          echo "NDK=/opt/android-ndk-r27b" >> $GITHUB_ENV
+          echo "CLANG=/opt/android-ndk-r27b/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android34-clang" >> $GITHUB_ENV
 
       - name: Generate kernel config
         run: |
-          make begonia_user_defconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- 2>&1 | tail -10 || \
-          make olddefconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- 2>&1 | tail -10
+          make begonia_user_defconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- 2>&1 | tail -5 || true
           scripts/config --disable COMPAT 2>/dev/null || true
-          make olddefconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- 2>&1 | tail -5
+          make olddefconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang CLANG_TRIPLE=aarch64-linux-gnu- 2>&1 | tail -5
 
       - name: Build kernel Image.gz
         run: |
-          make -j$(nproc) Image.gz ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- 2>&1
+          make -j$(nproc) Image.gz ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang CLANG_TRIPLE=aarch64-linux-gnu- 2>&1 | tail -30
 
       - name: Upload kernel artifact
         uses: actions/upload-artifact@v4
