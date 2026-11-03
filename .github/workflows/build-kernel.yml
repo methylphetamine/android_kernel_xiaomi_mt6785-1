@@ -38,8 +38,7 @@ jobs:
           grep -q '^CONFIG_VDSO=' arch/arm64/configs/begonia_user_defconfig || echo 'CONFIG_VDSO=n' >> arch/arm64/configs/begonia_user_defconfig
           sed -i 's/^CONFIG_VDSO32=.*/CONFIG_VDSO32=n/' arch/arm64/configs/begonia_user_defconfig 2>/dev/null || true
           grep -q '^CONFIG_VDSO32=' arch/arm64/configs/begonia_user_defconfig || echo 'CONFIG_VDSO32=n' >> arch/arm64/configs/begonia_user_defconfig
-          sed -i 's/^vdso_prepare.*/vdso_prepare:/' arch/arm64/Makefile
-          sed -i 's/^vdso_install.*/vdso_install:/' arch/arm64/Makefile
+          sed -i '/vdso/d' arch/arm64/Makefile
           rm -rf arch/arm64/kernel/vdso
           mkdir -p arch/arm64/kernel/vdso
           echo 'obj-y :=' > arch/arm64/kernel/vdso/Makefile
