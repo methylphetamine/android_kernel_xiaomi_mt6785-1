@@ -22,30 +22,20 @@ jobs:
           sudo apt-get install -y build-essential bc bison flex libssl-dev libncurses5-dev \
             libncursesw5-dev xz-utils tar curl wget git make gcc g++ libelf-dev
 
-      - name: Download aarch64 cross-compiler
+      - name: Install aarch64 cross-compiler
         run: |
-          cd /tmp
-          wget -q https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android/raw/lineage-20.0/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android/bin/aarch64-linux-android-gcc \
-            -O /tmp/aarch64-linux-android-gcc || \
-          wget -q https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android/raw/lineage-19.1/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android/bin/aarch64-linux-android-gcc \
-            -O /tmp/aarch64-linux-android-gcc || true
-          if [ -f /tmp/aarch64-linux-android-gcc ] && [ -s /tmp/aarch64-linux-android-gcc ]; then
-            chmod +x /tmp/aarch64-linux-android-gcc
-            echo "CROSS_COMPILE=/tmp/aarch64-linux-android-" >> $GITHUB_ENV
-          else
-            echo "CROSS_COMPILE=aarch64-linux-android-" >> $GITHUB_ENV
-          fi
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          echo "CROSS_COMPILE=aarch64-linux-gnu-" >> $GITHUB_ENV
           echo "ARCH=arm64" >> $GITHUB_ENV
-          echo "CC=/tmp/aarch64-linux-android-gcc" >> $GITHUB_ENV
 
       - name: Generate kernel config
         run: |
-          make begonia_user_defconfig ARCH=arm64 CROSS_COMPILE=${CROSS_COMPILE} 2>&1 | tail -5 || \
-          make olddefconfig ARCH=arm64 CROSS_COMPILE=${CROSS_COMPILE} 2>&1 | tail -5
+          make begonia_user_defconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- 2>&1 | tail -10 || \
+          make olddefconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- 2>&1 | tail -10
 
       - name: Build kernel Image.gz
         run: |
-          make -j$(nproc) Image.gz ARCH=arm64 CROSS_COMPILE=${CROSS_COMPILE} 2>&1 | tail -30
+          make -j$(nproc) Image.gz ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- 2>&1 | tail -30
 
       - name: Upload kernel artifact
         uses: actions/upload-artifact@v4
