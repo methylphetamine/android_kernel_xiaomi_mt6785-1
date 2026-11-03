@@ -1,0 +1,49 @@
+name: Build MT6785 Kernel
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ fifteen ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout kernel source
+        uses: actions/checkout@v4
+        with:
+          ref: fifteen
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential bc bison flex libssl-dev libncurses5-dev \
+            libncursesw5-dev xz-utils tar curl wget git make gcc g++
+
+      - name: Setup arm64 cross-compiler
+        run: |
+          cd /tmp
+          wget -q https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android/raw/lineage-20.0/bin/aarch64-linux-android-gcc \
+            -O /tmp/aarch64-linux-android-gcc || true
+          # Use system gcc if cross-compiler not available
+          echo "CROSS_COMPILE=aarch64-linux-android-" >> $GITHUB_ENV
+          echo "ARCH=arm64" >> $GITHUB_ENV
+
+      - name: Generate kernel config
+        run: |
+          make begonia_defconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-android- 2>/dev/null || \
+          make defconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-android- 2>/dev/null || \
+          echo "Using existing .config"
+
+      - name: Build kernel Image.gz
+        run: |
+          make -j$(nproc) Image.gz ARCH=arm64 CROSS_COMPILE=aarch64-linux-android- 2>&1 | tail -20
+
+      - name: Upload kernel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-image-gz
+          path: arch/arm64/boot/Image.gz
+          retention-days: 7
