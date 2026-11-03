@@ -42,10 +42,11 @@ jobs:
           scripts/config --disable COMPAT 2>/dev/null || true
           scripts/config --disable CC_STACKPROTECTOR_STRONG 2>/dev/null || true
           scripts/config --disable CC_STACKPROTECTOR 2>/dev/null || true
+          make olddefconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang CLANG_TRIPLE=aarch64-linux-gnu- LLVM=1 2>&1 | tail -5
+          rm -rf arch/arm64/kernel/vdso
           mkdir -p arch/arm64/kernel/vdso
           echo 'obj-y :=' > arch/arm64/kernel/vdso/Makefile
           echo 'obj-m :=' >> arch/arm64/kernel/vdso/Makefile
-          make olddefconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang CLANG_TRIPLE=aarch64-linux-gnu- LLVM=1 2>&1 | tail -5
 
       - name: Build kernel Image.gz
         run: |
