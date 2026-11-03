@@ -38,11 +38,8 @@ jobs:
           scripts/config --disable COMPAT 2>/dev/null || true
           scripts/config --disable CC_STACKPROTECTOR_STRONG 2>/dev/null || true
           scripts/config --disable CC_STACKPROTECTOR 2>/dev/null || true
+          rm -rf arch/arm64/kernel/vdso
           make olddefconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang CLANG_TRIPLE=aarch64-linux-gnu- LLVM=1 2>&1 | tail -5
-          sed -i 's/CONFIG_VDSO=y/CONFIG_VDSO=n/' .config 2>/dev/null || true
-          sed -i 's/CONFIG_VDSO32=y/CONFIG_VDSO32=n/' .config 2>/dev/null || true
-          echo "CONFIG_VDSO=n" >> .config
-          echo "CONFIG_VDSO32=n" >> .config
 
       - name: Build kernel Image.gz
         run: |
