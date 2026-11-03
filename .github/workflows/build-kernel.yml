@@ -34,15 +34,15 @@ jobs:
 
       - name: Generate kernel config
         run: |
-          make begonia_user_defconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- 2>&1 | tail -5 || true
+          make begonia_user_defconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang CLANG_TRIPLE=aarch64-linux-gnu- LLVM=1 2>&1 | tail -5 || true
           scripts/config --disable COMPAT 2>/dev/null || true
           scripts/config --disable CC_STACKPROTECTOR_STRONG 2>/dev/null || true
           scripts/config --disable CC_STACKPROTECTOR 2>/dev/null || true
-          make olddefconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang CLANG_TRIPLE=aarch64-linux-gnu- 2>&1 | tail -5
+          make olddefconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang CLANG_TRIPLE=aarch64-linux-gnu- LLVM=1 2>&1 | tail -5
 
       - name: Build kernel Image.gz
         run: |
-          make -j$(nproc) Image.gz ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang CLANG_TRIPLE=aarch64-linux-gnu- 2>&1 | tail -30
+          make -j$(nproc) Image.gz ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang CLANG_TRIPLE=aarch64-linux-gnu- LLVM=1 2>&1 | tail -30
 
       - name: Upload kernel artifact
         uses: actions/upload-artifact@v4
