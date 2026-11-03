@@ -42,15 +42,15 @@ jobs:
           mkdir -p arch/arm64/kernel/vdso
           echo 'obj-y :=' > arch/arm64/kernel/vdso/Makefile
           echo 'obj-m :=' >> arch/arm64/kernel/vdso/Makefile
-          make begonia_user_defconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-android- CC=clang CLANG_TRIPLE=aarch64-linux-android- LLVM=1 2>&1 | tail -5 || true
+          make begonia_user_defconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-android- CC=clang CLANG_TRIPLE=aarch64-linux-android LLVM=1 2>&1 | tail -5 || true
           scripts/config --disable COMPAT 2>/dev/null || true
           scripts/config --disable CC_STACKPROTECTOR_STRONG 2>/dev/null || true
           scripts/config --disable CC_STACKPROTECTOR 2>/dev/null || true
-          make olddefconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-android- CC=clang CLANG_TRIPLE=aarch64-linux-android- LLVM=1 2>&1 | tail -5
+          make olddefconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-android- CC=clang CLANG_TRIPLE=aarch64-linux-android LLVM=1 2>&1 | tail -5
 
       - name: Build kernel Image.gz
         run: |
-          make -j$(nproc) Image.gz ARCH=arm64 CROSS_COMPILE=aarch64-linux-android- CC=clang CLANG_TRIPLE=aarch64-linux-android- LLVM=1 2>&1
+          make -j$(nproc) Image.gz ARCH=arm64 CROSS_COMPILE=aarch64-linux-android- CC=clang CLANG_TRIPLE=aarch64-linux-android LLVM=1 2>&1
           ls -la arch/arm64/boot/
 
       - name: Upload kernel artifact
