@@ -1,4 +1,4 @@
-name: Build Kernel (Final Solution - Clang 15)
+name: Build Kernel (Final Solution - Correct Package Names)
 
 on:
   push:
@@ -18,25 +18,25 @@ jobs:
       - name: Setup Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y curl unzip git wget lld bc build-essential flex bison libssl-dev libncurses-dev libelf-dev
+          sudo apt-get install -y curl unzip git
 
-      - name: Install Clang 15
+      - name: Install Linux Cross-Compiler
         run: |
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 15
-          sudo apt-get install -y clang-15 lld-15 llvm-15
-          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 100
-          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 100
-          sudo update-alternatives --install /usr/bin/ld.lld ld.lld /usr/bin/ld.lld-15 100
+          sudo apt-get install -y \
+            gcc-aarch64-linux-gnu \
+            binutils-aarch64-linux-gnu \
+            g++-aarch64-linux-gnu
 
       - name: Verify Toolchain
         run: |
-          echo "Installed clang version:"
-          clang-15 --version | head -1
+          echo "Installed cross-compiler version:"
+          aarch64-linux-gnu-gcc --version | head -1
           echo ""
-          echo "Installed lld version:"
-          lld-15 --version | head -1
+          if ! aarch64-linux-gnu-gcc --target=aarch64-linux-gnu -v >/dev/null 2>&1; then
+            echo "ERROR: Cross-compiler does not support aarch64-linux-gnu target"
+            exit 1
+          fi
+          echo "✅ Cross-compiler verified successfully"
 
       - name: Setup build cache
         uses: actions/cache@v4
@@ -50,19 +50,15 @@ jobs:
 
       - name: Build Kernel
         run: |
-          echo "Starting MT6785 kernel build with Clang 15..."
-          echo "Using clang: $(which clang-15)"
-          echo "Clang version: $(clang-15 --version | head -1)"
+          echo "Starting MT6785 kernel build with verified toolchain..."
+          echo "Using cross-compiler: $(which aarch64-linux-gnu-gcc)"
+          echo "Cross-compiler version: $(aarch64-linux-gnu-gcc --version | head -1)"
           
-          # Set up environment with Clang 15
-          export CC="clang-15"
-          export CXX="clang++-15"
-          export AR="llvm-ar-15"
-          export NM="llvm-nm-15"
-          export OBJCOPY="llvm-objcopy-15"
-          export OBJDUMP="llvm-objdump-15"
-          export STRIP="llvm-strip-15"
-          export LD="ld.lld-15"
+          export CC="aarch64-linux-gnu-gcc"
+          export CXX="aarch64-linux-gnu-g++"
+          export AR="aarch64-linux-gnu-ar"
+          export LD="aarch64-linux-gnu-ld"
+          export AS="aarch64-linux-gnu-as"
+          export NM="aarch64-linux-gnu-nm"
           
-          # Run the build script
           ./build.sh
