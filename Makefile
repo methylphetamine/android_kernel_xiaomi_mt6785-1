@@ -726,15 +726,15 @@ else
 KBUILD_CFLAGS   += -O3 -ffp-contract=fast
 endif
 ifeq ($(cc-name),gcc)
-ifneq ($(SRCARCH),x86)
 KBUILD_CFLAGS	+= -mcpu=cortex-a76.cortex-a55 -mtune=cortex-a76.cortex-a55
-endif
+KBUILD_CFLAGS   := $(filter-out -mcpu=cortex-a76.cortex-a55,$(KBUILD_CFLAGS))
+KBUILD_CFLAGS   := $(filter-out -mtune=cortex-a76.cortex-a55,$(KBUILD_CFLAGS))
 endif
 
 ifeq ($(cc-name),clang)
-ifneq ($(SRCARCH),x86)
 KBUILD_CFLAGS	+= -mcpu=cortex-a55 -mtune=cortex-a55
-endif
+KBUILD_CFLAGS   := $(filter-out -mcpu=cortex-a55,$(KBUILD_CFLAGS))
+KBUILD_CFLAGS   := $(filter-out -mtune=cortex-a55,$(KBUILD_CFLAGS))
 
 ifdef CONFIG_LLVM_POLLY
 KBUILD_CFLAGS	+= -mllvm -polly \
