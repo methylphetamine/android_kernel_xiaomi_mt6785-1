@@ -17,14 +17,17 @@ jobs:
 
       - name: Build Kernel
         run: |
-          mkdir -p /tmp/kernel_build
-          cd /tmp/kernel_build
-          git clone https://github.com/methylphetamine/android_kernel_xiaomi_mt6785-1.git
-          cd android_kernel_xiaomi_mt6785-1
-          git checkout fifteen
-          wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
-          unzip -q ndk.zip -d /opt
-          export PATH=/opt/android-ndk-r25b/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+          echo "Build workflow started"
+          if [ -d "/opt/android-ndk-r25b/toolchains/llvm/prebuilt/linux-x86_64/bin" ]; then
+            echo "NDK found, setting up PATH"
+            export PATH=/opt/android-ndk-r25b/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+          else
+            echo "NDK not found - attempting to install"
+            wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip || wget -q https://mirrors.edge.kernel.org/google/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
+            unzip -q ndk.zip -d /opt
+            export PATH=/opt/android-ndk-r25b/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+          fi
+          echo "PATH=$PATH"
           make begonia_user_defconfig ARCH=arm64 CC=aarch64-linux-android-clang CLANG_TRIPLE=aarch64-linux-android- LLVM=1 2>&1 | tail -5 || true
           scripts/config --disable COMPAT 2>/dev/null || true
           scripts/config --disable CC_STACKPROTECTOR_STRONG 2>/dev/null || true
