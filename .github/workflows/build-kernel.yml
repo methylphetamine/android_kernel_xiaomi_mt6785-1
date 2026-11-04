@@ -15,31 +15,10 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup NDK
+      - name: Setup NDK and Build
         run: |
           wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
           unzip -q ndk.zip -d /opt
-          echo "NDK=/opt/android-ndk-r25b" >> $GITHUB_ENV
-          echo "/opt/android-ndk-r25b/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
-
-      - name: Generate kernel config
-        run: |
-          sed -i 's/^CONFIG_VDSO=.*/CONFIG_VDSO=n/' arch/arm64/configs/begonia_user_defconfig 2>/dev/null || true
-          grep -q '^CONFIG_VDSO=' arch/arm64/configs/begonia_user_defconfig || echo 'CONFIG_VDSO=n' >> arch/arm64/configs/begonia_user_defconfig
-          sed -i 's/^CONFIG_VDSO32=.*/CONFIG_VDSO32=n/' arch/arm64/configs/begonia_user_defconfig 2>/dev/null || true
-          grep -q '^CONFIG_VDSO32=' arch/arm64/configs/begonia_user_defconfig || echo 'CONFIG_VDSO32=n' >> arch/arm64/configs/begonia_user_defconfig
-          sed -i '/vdso/d' arch/arm64/Makefile
-          rm -rf arch/arm64/kernel/vdso
-          mkdir -p arch/arm64/kernel/vdso
-          echo 'obj-y :=' > arch/arm64/kernel/vdso/Makefile
-          echo 'obj-m :=' >> arch/arm64/kernel/vdso/Makefile
-          make begonia_user_defconfig ARCH=arm64 CC=aarch64-linux-android21-clang CLANG_TRIPLE=aarch64-linux-android LLVM=1 2>&1 | tail -5 || true
-          scripts/config --disable COMPAT 2>/dev/null || true
-          scripts/config --disable CC_STACKPROTECTOR_STRONG 2>/dev/null || true
-          scripts/config --disable CC_STACKPROTECTOR 2>/dev/null || true
-          make olddefconfig ARCH=arm64 CC=aarch64-linux-android21-clang CLANG_TRIPLE=aarch64-linux-android LLVM=1 2>&1 | tail -5
-
-      - name: Build kernel Image.gz
-        run: |
-          make -j$(nproc) Image.gz ARCH=arm64 CC=aarch64-linux-android21-clang CLANG_TRIPLE=aarch64-linux-android LLVM=1 EXTRA_CFLAGS="-mcpu=cortex-a55" 2>&1
+          export PATH=/opt/android-ndk-r25b/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+          make -j$(nproc) Image.gz ARCH=arm64 CC=aarch64-linux-android-clang CLANG_TRIPLE=aarch64-linux-android- LLVM=1 EXTRA_CFLAGS="-mcpu=cortex-a55" 2>&1
           ls -la arch/arm64/boot/
