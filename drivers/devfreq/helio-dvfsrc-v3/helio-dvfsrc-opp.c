@@ -11,7 +11,7 @@
  * See http://www.gnu.org/licenses/gpl-2.0.html for more details.
  */
 
-#include <helio-dvfsrc-qos.h>
+#include "helio-dvfsrc-qos.h"
 #include <helio-dvfsrc-opp.h>
 #if defined(CONFIG_MTK_QOS_V2)
 #include <mtk_qos_ipi.h>
