@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 # MT6785 Kernel Builder - Using Clang 15
-# Final solution for MT6785 kernel build with Clang 15
-
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -30,7 +28,7 @@ verify_toolchain() {
 }
 
 main() {
-    verify_toolchain()
+    verify_toolchain
     
     mkdir -p "$BUILD_DIR"
     mkdir -p "$OUT_DIR"
@@ -55,7 +53,6 @@ main() {
     if [[ -f arch/arm64/boot/Image.gz ]]; then
         echo ""
         log "✅ Kernel build successful!"
-        echo "The MT6360 flashlight fix has been applied and the kernel is ready."
     else
         err "❌ Kernel build failed - Image.gz not found"
         exit 1
