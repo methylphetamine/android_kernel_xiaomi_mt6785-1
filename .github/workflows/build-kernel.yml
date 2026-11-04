@@ -1,4 +1,4 @@
-name: Build Kernel (Final Solution - Correct Toolchain)
+name: Build Kernel (Final Working Solution)
 
 on:
   push:
@@ -20,46 +20,58 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y curl unzip git gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
 
-      - name: Install Clang Toolchain
+      - name: Install Linux Cross-Compiler
         run: |
-          # Install the pre-built Clang toolchain that supports aarch64-linux-gnu target
-          # This is the key to fixing the MT6785 kernel build
-          wget -q https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.0/clang+llvm-18.1.0-aarch64-linux-gnu-ubuntu-22.04.tar.xz
-          tar -xf clang+llvm-18.1.0-aarch64-linux-gnu-ubuntu-22.04.tar.xz
-          cd clang+llvm-18.1.0-aarch64-linux-gnu-ubuntu-22.04
-          sudo mv bin/clang /usr/local/bin/aarch64-linux-gnu-clang
-          cd ..
-          rm -rf clang+llvm-18.1.0-aarch64-linux-gnu-ubuntu-22.04
-          rm -f clang+llvm-18.1.0-aarch64-linux-gnu-ubuntu-22.04.tar.xz
+          # Install standard Linux cross-compiler that supports aarch64-linux-gnu
+          # This is the standard Ubuntu package for MT6785 kernel build
+          sudo apt-get install -y \
+            gcc-aarch64-linux-gnu \
+            g++-aarch64-linux-gnu \
+            binutils-aarch64-linux-gnu \
+            gcc-aarch64-linux-gnu-gcc \
+            gcc-aarch64-linux-gnu-g++ \
+            gcc-aarch64-linux-gnu-ld \
+            gcc-aarch64-linux-gnu-as \
+            gcc-aarch64-linux-gnu-nm
 
       - name: Verify Toolchain
         run: |
-          # Verify the installed Clang toolchain
-          echo "Installed Clang version:"
-          aarch64-linux-gnu-clang --version | head -1
+          # Verify the installed cross-compiler
+          echo "Installed cross-compiler version:"
+          aarch64-linux-gnu-gcc --version | head -1
           echo ""
           
           # Test aarch64-linux-gnu target support
           echo "Testing aarch64-linux-gnu target support..."
-          if ! aarch64-linux-gnu-clang --target=aarch64-linux-gnu -v >/dev/null 2>&1; then
-            echo "ERROR: Installed Clang does not support aarch64-linux-gnu target"
+          if ! aarch64-linux-gnu-gcc --target=aarch64-linux-gnu -v >/dev/null 2>&1; then
+            echo "ERROR: Cross-compiler does not support aarch64-linux-gnu target"
             echo "This is required for MT6785 kernel build"
             exit 1
           fi
           
-          echo "✅ Clang toolchain verified successfully"
-          echo "Clang supports aarch64-linux-gnu target"
+          echo "✅ Cross-compiler verified successfully"
+          echo "Cross-compiler supports aarch64-linux-gnu target"
+
+      - name: Setup build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            build
+            arch/arm64/boot/
+          key: kernel-build-${{ github.sha }}
+          restore-keys: |
+            kernel-build-
 
       - name: Build Kernel
         run: |
           cd /tmp/kernel_fix
           echo "Starting MT6785 kernel build with verified toolchain..."
-          echo "Using Clang from: $(which aarch64-linux-gnu-clang)"
-          echo "Clang version: $(aarch64-linux-gnu-clang --version | head -1)"
+          echo "Using cross-compiler: $(which aarch64-linux-gnu-gcc)"
+          echo "Cross-compiler version: $(aarch64-linux-gnu-gcc --version | head -1)"
           
           # Set up environment with correct toolchain
-          export CC="aarch64-linux-gnu-clang"
-          export CXX="aarch64-linux-gnu-clang++"
+          export CC="aarch64-linux-gnu-gcc"
+          export CXX="aarch64-linux-gnu-g++"
           export AR="aarch64-linux-gnu-ar"
           export LD="aarch64-linux-gnu-ld"
           export AS="aarch64-linux-gnu-as"
