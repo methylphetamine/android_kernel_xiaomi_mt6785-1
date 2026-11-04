@@ -15,14 +15,20 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup NDK and Build
+      - name: Build Kernel
         run: |
+          mkdir -p /tmp/kernel_build
+          cd /tmp/kernel_build
+          git clone https://github.com/methylphetamine/android_kernel_xiaomi_mt6785-1.git
+          cd android_kernel_xiaomi_mt6785-1
+          git checkout fifteen
           wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
           unzip -q ndk.zip -d /opt
-          make begonia_user_defconfig ARCH=arm64 CC=/opt/android-ndk-r25b/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-clang CLANG_TRIPLE=aarch64-linux-android- LLVM=1 2>&1 | tail -5 || true
+          export PATH=/opt/android-ndk-r25b/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+          make begonia_user_defconfig ARCH=arm64 CC=aarch64-linux-android-clang CLANG_TRIPLE=aarch64-linux-android- LLVM=1 2>&1 | tail -5 || true
           scripts/config --disable COMPAT 2>/dev/null || true
           scripts/config --disable CC_STACKPROTECTOR_STRONG 2>/dev/null || true
           scripts/config --disable CC_STACKPROTECTOR 2>/dev/null || true
-          make olddefconfig ARCH=arm64 CC=/opt/android-ndk-r25b/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-clang CLANG_TRIPLE=aarch64-linux-android- LLVM=1 2>&1 | tail -5
-          make -j$(nproc) Image.gz ARCH=arm64 CC=/opt/android-ndk-r25b/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-clang CLANG_TRIPLE=aarch64-linux-android- LLVM=1 EXTRA_CFLAGS="-mcpu=cortex-a55" 2>&1
+          make olddefconfig ARCH=arm64 CC=aarch64-linux-android-clang CLANG_TRIPLE=aarch64-linux-android- LLVM=1 2>&1 | tail -5
+          make -j$(nproc) Image.gz ARCH=arm64 CC=aarch64-linux-android-clang CLANG_TRIPLE=aarch64-linux-android- LLVM=1 EXTRA_CFLAGS="-mcpu=cortex-a55" 2>&1
           ls -la arch/arm64/boot/
