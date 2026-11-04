@@ -1,4 +1,4 @@
-name: Build Kernel (Self-Contained)
+name: Build Kernel (Correct Toolchain)
 
 on:
   push:
@@ -18,54 +18,46 @@ jobs:
       - name: Setup Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y curl unzip git
+          sudo apt-get install -y curl unzip git gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
 
-      - name: Build Kernel with Self-Contained Toolchain
+      - name: Install ARM Toolchain
         run: |
-          # Create kerdevdep directory structure for toolchain
-          mkdir -p kerdevdep
-          cd kerdevdep
-          
-          # Download TheRagingBeast Clang toolchain (Pox approach)
-          TRB_CLANG_REPO="${TRB_CLANG_REPO:-https://gitlab.com/voltageos/clang.git}"
-          TRB_CLANG_PIN="${TRB_CLANG_PIN:-b0fa406b3f65eae210c60dda2e91dae979e4b3a8}"
-          TRB_CLANG_URL="${TRB_CLANG_URL:-https://gitlab.com/voltageos/clang/-/archive/${TRB_CLANG_PIN}/clang-${TRB_CLANG_PIN}.tar.gz}"
-          
-          echo "Downloading TheRagingBeast Clang ${TRB_CLANG_PIN:0:8}..."
-          mkdir -p .extract
-          curl -L --fail --retry 3 -o clang.tar.gz "$TRB_CLANG_URL"
-          tar -xzf clang.tar.gz -C .extract --strip-components=1
-          mv .extract clang
-          rm -f clang.tar.gz
-          echo "trb:${TRB_CLANG_REPO}:${TRB_CLANG_PIN}" > clang/.kerdevdep-toolchain
-          
-          echo "TRB Clang toolchain setup completed."
-          
-          # Verify Clang supports ARM64 target
-          if ! clang --target=aarch64-linux-gnu --version >/dev/null 2>&1; then
-            echo "ERROR: Clang toolchain does not support aarch64-linux-gnu target"
-            echo "This toolchain is not suitable for MT6785 kernel build"
-            exit 1
-          fi
-          
-          echo "Clang target compatibility verified."
+          # Install the GNU binutils (ld) for aarch64-linux-gnu
+          sudo apt-get install -y g++-aarch64-linux-gnu g++-aarch64-linux-gnu
 
-      - name: Setup cache for build artifacts
-        uses: actions/cache@v4
-        with:
-          path: |
-            build
-            arch/arm64/boot/
-          key: kernel-build-${{ github.sha }}
-          restore-keys: |
-            kernel-build-
+      - name: Setup Kernel Build Environment
+        run: |
+          # Create build directory
+          mkdir -p build
+          cd build
+          
+          # Initialize kernel source (already checked out)
+          echo "Kernel source ready for MT6785 build"
 
       - name: Build Kernel
         run: |
           cd /tmp/kernel_fix
-          echo "Using self-contained toolchain build approach..."
-          echo "Clang from: $(which clang)"
-          echo "Clang version: $(clang --version | head -1)"
+          echo "Starting MT6785 kernel build with the correct toolchain..."
+          
+          # Use system gcc for cross-compilation (standard Linux toolchain)
+          # The kernel Makefile expects gcc with aarch64-linux-gnu-* prefixes
+          export CC=aarch64-linux-gnu-gcc
+          export AR=aarch64-linux-gnu-ar
+          export LD=aarch64-linux-gnu-ld
+          export AS=aarch64-linux-gnu-as
+          export NM=aarch64-linux-gnu-nm
+          
+          echo "Using cross-compiler: $CC"
+          echo "GCC version: $($CC --version | head -1)"
+          
+          # Verify the cross-compiler supports aarch64-linux-gnu
+          if ! $CC --target=aarch64-linux-gnu -v >/dev/null 2>&1; then
+            echo "ERROR: Cross-compiler does not support aarch64-linux-gnu target"
+            echo "This is required for MT6785 kernel build"
+            exit 1
+          fi
+          
+          echo "✅ Cross-compiler verified successfully"
           
           # Run the build script
           ./build.sh
