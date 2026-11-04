@@ -1,4 +1,4 @@
-name: Build Kernel (Final Working Solution)
+name: Build Kernel (Final Solution - Correct Package Names)
 
 on:
   push:
@@ -18,21 +18,16 @@ jobs:
       - name: Setup Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y curl unzip git gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
+          sudo apt-get install -y curl unzip git
 
       - name: Install Linux Cross-Compiler
         run: |
-          # Install standard Linux cross-compiler that supports aarch64-linux-gnu
-          # This is the standard Ubuntu package for MT6785 kernel build
+          # Install the standard Ubuntu packages for MT6785 kernel build
+          # The correct package names are:
           sudo apt-get install -y \
             gcc-aarch64-linux-gnu \
-            g++-aarch64-linux-gnu \
             binutils-aarch64-linux-gnu \
-            gcc-aarch64-linux-gnu-gcc \
-            gcc-aarch64-linux-gnu-g++ \
-            gcc-aarch64-linux-gnu-ld \
-            gcc-aarch64-linux-gnu-as \
-            gcc-aarch64-linux-gnu-nm
+            g++-aarch64-linux-gnu
 
       - name: Verify Toolchain
         run: |
