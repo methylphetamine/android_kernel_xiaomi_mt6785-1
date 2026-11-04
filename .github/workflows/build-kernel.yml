@@ -15,10 +15,12 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install build dependencies
+      - name: Setup NDK
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf clang
+          wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
+          unzip -q ndk.zip -d /opt
+          echo "NDK=/opt/android-ndk-r25b" >> $GITHUB_ENV
+          echo "/opt/android-ndk-r25b/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
 
       - name: Generate kernel config
         run: |
@@ -31,13 +33,13 @@ jobs:
           mkdir -p arch/arm64/kernel/vdso
           echo 'obj-y :=' > arch/arm64/kernel/vdso/Makefile
           echo 'obj-m :=' >> arch/arm64/kernel/vdso/Makefile
-          make begonia_user_defconfig ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-android- LLVM=1 2>&1 | tail -5 || true
+          make begonia_user_defconfig ARCH=arm64 CC=aarch64-linux-android21-clang CLANG_TRIPLE=aarch64-linux-android LLVM=1 2>&1 | tail -5 || true
           scripts/config --disable COMPAT 2>/dev/null || true
           scripts/config --disable CC_STACKPROTECTOR_STRONG 2>/dev/null || true
           scripts/config --disable CC_STACKPROTECTOR 2>/dev/null || true
-          make olddefconfig ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-android- LLVM=1 2>&1 | tail -5
+          make olddefconfig ARCH=arm64 CC=aarch64-linux-android21-clang CLANG_TRIPLE=aarch64-linux-android LLVM=1 2>&1 | tail -5
 
       - name: Build kernel Image.gz
         run: |
-          make -j$(nproc) Image.gz ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-android- LLVM=1 EXTRA_CFLAGS="-mcpu=cortex-a55" 2>&1
+          make -j$(nproc) Image.gz ARCH=arm64 CC=aarch64-linux-android21-clang CLANG_TRIPLE=aarch64-linux-android LLVM=1 EXTRA_CFLAGS="-mcpu=cortex-a55" 2>&1
           ls -la arch/arm64/boot/
