@@ -15,18 +15,10 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup NDK and Generate Config
+      - name: Setup NDK and Build
         run: |
           wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
           unzip -q ndk.zip -d /opt
-          echo "/opt/android-ndk-r25b/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
-          make begonia_user_defconfig ARCH=arm64 CC=aarch64-linux-android-clang CLANG_TRIPLE=aarch64-linux-android- LLVM=1 2>&1 | tail -5 || true
-          scripts/config --disable COMPAT 2>/dev/null || true
-          scripts/config --disable CC_STACKPROTECTOR_STRONG 2>/dev/null || true
-          scripts/config --disable CC_STACKPROTECTOR 2>/dev/null || true
-          make olddefconfig ARCH=arm64 CC=aarch64-linux-android-clang CLANG_TRIPLE=aarch64-linux-android- LLVM=1 2>&1 | tail -5
-
-      - name: Build kernel Image.gz
-        run: |
+          PATH=/opt/android-ndk-r25b/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
           make -j$(nproc) Image.gz ARCH=arm64 CC=aarch64-linux-android-clang CLANG_TRIPLE=aarch64-linux-android- LLVM=1 EXTRA_CFLAGS="-mcpu=cortex-a55" 2>&1
           ls -la arch/arm64/boot/
