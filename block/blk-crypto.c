@@ -307,9 +307,6 @@ EXPORT_SYMBOL_GPL(blk_crypto_evict_key);
 
 inline void blk_crypto_flock(struct keyslot_manager *ksm, unsigned int flags)
 {
-	if (ksm && ksm->ksm_ops && ksm->ksm_ops->ksm_flock)
-		ksm->ksm_ops->ksm_flock(ksm, flags);
-	else if (ksm)
-		ksm_flock(ksm, flags);
+	ksm_flock(ksm, flags);
 }
 EXPORT_SYMBOL_GPL(blk_crypto_flock);
