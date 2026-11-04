@@ -310,3 +310,4 @@ inline inline void blk_crypto_flock(struct keyslot_manager *ksm, unsigned int fl
 	ksm_flock(ksm, flags);
 }
 EXPORT_SYMBOL_GPL(blk_crypto_flock);
+EXPORT_SYMBOL_GPL(blk_crypto_flock);
