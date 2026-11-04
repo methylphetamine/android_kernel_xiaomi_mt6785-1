@@ -994,13 +994,11 @@ static void mt6360_torch2_brightness_set(struct led_classdev *led_cdev,
 
 	if (LED_OFF == value) {
 		arg.level = 0;
-		if (flash_is_use) {
-			pr_debug("disable flashlight");
-			flash_is_use = 0;
-			mt6360_operate(MT6360_CHANNEL_CH1, MT6360_DISABLE);
-			mt6360_operate(MT6360_CHANNEL_CH2, MT6360_DISABLE);
-			mt6360_set_driver(0);
-		}
+		pr_debug("disable flashlight");
+		flash_is_use = 0;
+		mt6360_operate(MT6360_CHANNEL_CH1, MT6360_DISABLE);
+		mt6360_operate(MT6360_CHANNEL_CH2, MT6360_DISABLE);
+		mt6360_set_driver(0);
 	} else if ((value > 0) && (value <= 3)) {
 			arg.level = value;
 	} else if (value < 0) {
