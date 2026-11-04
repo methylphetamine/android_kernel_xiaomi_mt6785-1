@@ -1,35 +1,24 @@
-name: Build MT6785 Kernel
+name: Build Kernel
 
 on:
-  workflow_dispatch:
   push:
+    branches: [ fifteen ]
+  pull_request:
     branches: [ fifteen ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
 
     steps:
-      - name: Checkout kernel source
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          ref: fifteen
+          submodules: recursive
 
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential bc bison flex libssl-dev libncurses5-dev \
-            libncursesw5-dev xz-utils tar curl wget git make gcc g++ libelf-dev \
-            python3 python3-pip rsync
-
-      - name: Download Android NDK r25b (clang 14)
-        run: |
-          cd /tmp
-          wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
-          unzip -q ndk.zip -d /opt
-          echo "NDK=/opt/android-ndk-r25b" >> $GITHUB_ENV
-          echo "/opt/android-ndk-r25b/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
+          sudo apt-get install -y gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf gcc-llvm
 
       - name: Generate kernel config
         run: |
@@ -50,12 +39,5 @@ jobs:
 
       - name: Build kernel Image.gz
         run: |
-          make -j$(nproc) Image.gz ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-android- LLVM=1 2>&1
+          make -j$(nproc) Image.gz ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-android- LLVM=1 EXTRA_CFLAGS="-mcpu=cortex-a55" 2>&1
           ls -la arch/arm64/boot/
-
-      - name: Upload kernel artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: kernel-image-gz
-          path: arch/arm64/boot/Image.gz
-          retention-days: 7
