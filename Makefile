@@ -726,15 +726,11 @@ else
 KBUILD_CFLAGS   += -O3 -ffp-contract=fast
 endif
 ifeq ($(cc-name),gcc)
-ifeq ($(ARCH),arm64)
 KBUILD_CFLAGS	+= -mcpu=cortex-a76.cortex-a55 -mtune=cortex-a76.cortex-a55
-endif
 endif
 
 ifeq ($(cc-name),clang)
-ifeq ($(ARCH),arm64)
 KBUILD_CFLAGS	+= -mcpu=cortex-a55 -mtune=cortex-a55
-endif
 
 ifdef CONFIG_LLVM_POLLY
 KBUILD_CFLAGS	+= -mllvm -polly \
