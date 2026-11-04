@@ -18,7 +18,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf gcc-llvm
+          sudo apt-get install -y gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf clang
 
       - name: Generate kernel config
         run: |
